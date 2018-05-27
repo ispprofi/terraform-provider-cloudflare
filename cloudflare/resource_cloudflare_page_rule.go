@@ -189,7 +189,7 @@ func resourceCloudFlarePageRule() *schema.Resource {
 						"security_level": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"essentially_off", "low", "medium", "high", "under_attack"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"off", "essentially_off", "low", "medium", "high", "under_attack"}, false),
 						},
 
 						"ssl": {
@@ -211,7 +211,7 @@ func resourceCloudFlarePageRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Default:      "active",
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"active", "paused"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"active", "disabled"}, false),
 			},
 		},
 	}
