@@ -197,6 +197,11 @@ func resourceCloudFlarePageRule() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"off", "flexible", "full", "strict"}, false),
 						},
+
+						"bypass_cache_on_cookie": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -327,8 +332,7 @@ func resourceCloudFlarePageRuleRead(d *schema.ResourceData, meta interface{}) er
 	for _, pageRuleAction := range pageRule.Actions {
 		key, value, err := transformFromCloudFlarePageRuleAction(&pageRuleAction)
 		if err != nil {
-			log.Printf("[WARN] %v", err)
-			continue
+			return fmt.Errorf("Failed to parse page rule action: %s", err)
 		}
 		actions[key] = value
 	}
@@ -417,7 +421,7 @@ func resourceCloudFlarePageRuleDelete(d *schema.ResourceData, meta interface{}) 
 var pageRuleAPIOnOffFields = []string{"always_online", "automatic_https_rewrites", "browser_check", "email_obfuscation", "ip_geolocation", "opportunistic_encryption", "server_side_exclude", "smart_errors", "waf", "mirage"}
 var pageRuleAPINilFields = []string{"always_use_https", "disable_apps", "disable_performance", "disable_security", "disable_railgun"}
 var pageRuleAPIFloatFields = []string{"browser_cache_ttl", "edge_cache_ttl"}
-var pageRuleAPIStringFields = []string{"cache_level", "rocket_loader", "security_level", "ssl"}
+var pageRuleAPIStringFields = []string{"cache_level", "rocket_loader", "security_level", "ssl", "bypass_cache_on_cookie"}
 
 func transformFromCloudFlarePageRuleAction(pageRuleAction *cloudflare.PageRuleAction) (key string, value interface{}, err error) {
 	key = pageRuleAction.ID
