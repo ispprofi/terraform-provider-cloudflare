@@ -32,6 +32,11 @@ func resourceCloudFlareFirewallAccessRule() *schema.Resource {
 				Computed: true,
 			},
 
+			"org_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"scope": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -67,14 +72,24 @@ func resourceCloudFlareFirewallAccessRule() *schema.Resource {
 
 func resourceCloudFlareFirewallAccessRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
-	zone := d.Get("zone").(string)
+	zoneName := d.Get("zone").(string)
 	scope := d.Get("scope").(string)
 
-	zoneID, err := client.ZoneIDByName(zone)
+	zoneID, err := client.ZoneIDByName(zoneName)
 	if err != nil {
 		return err
 	}
 	d.Set("zone_id", zoneID)
+
+	orgID := "N/A"
+	if scope != "zone" {
+		zone, err := client.ZoneDetails(zoneID)
+		if err != nil {
+			return err
+		}
+		orgID = zone.Owner.ID
+	}
+	d.Set("org_id", orgID)
 
 	rule := cloudflare.AccessRule{
 		Mode: d.Get("mode").(string),
@@ -92,11 +107,7 @@ func resourceCloudFlareFirewallAccessRuleCreate(d *schema.ResourceData, meta int
 			return err
 		}
 	} else {
-		zone, err := client.ZoneDetails(zoneID)
-		if err != nil {
-			return err
-		}
-		res, err = client.CreateOrganizationAccessRule(zone.Owner.ID, rule)
+		res, err = client.CreateOrganizationAccessRule(orgID, rule)
 		if err != nil {
 			return err
 		}
@@ -113,6 +124,7 @@ func resourceCloudFlareFirewallAccessRuleCreate(d *schema.ResourceData, meta int
 func resourceCloudFlareFirewallAccessRuleRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zoneID := d.Get("zone_id").(string)
+	orgID := d.Get("org_id").(string)
 	scope := d.Get("scope").(string)
 	ruleID := d.Id()
 
@@ -121,7 +133,7 @@ func resourceCloudFlareFirewallAccessRuleRead(d *schema.ResourceData, meta inter
 	if scope == "zone" {
 		rule, err = findZoneAccessRule(client, zoneID, ruleID)
 	} else {
-		rule, err = findOrganizationAccessRule(client, zoneID, ruleID)
+		rule, err = findOrganizationAccessRule(client, orgID, ruleID)
 	}
 	if err != nil {
 		return err
@@ -155,16 +167,12 @@ func findZoneAccessRule(client *cloudflare.API, zoneID string, ruleID string) (*
 	}
 }
 
-func findOrganizationAccessRule(client *cloudflare.API, zoneID string, ruleID string) (*cloudflare.AccessRule, error) {
+func findOrganizationAccessRule(client *cloudflare.API, orgID string, ruleID string) (*cloudflare.AccessRule, error) {
 	search := cloudflare.AccessRule{}
 	search.Scope.Type = "organization"
-	zone, err := client.ZoneDetails(zoneID)
-	if err != nil {
-		return nil, err
-	}
 	page := 1
 	for {
-		res, err := client.ListOrganizationAccessRules(zone.Owner.ID, search, page)
+		res, err := client.ListOrganizationAccessRules(orgID, search, page)
 		if err != nil {
 			return nil, err
 		}
@@ -183,6 +191,7 @@ func findOrganizationAccessRule(client *cloudflare.API, zoneID string, ruleID st
 func resourceCloudFlareFirewallAccessRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zoneID := d.Get("zone_id").(string)
+	orgID := d.Get("org_id").(string)
 	scope := d.Get("scope").(string)
 	ruleID := d.Id()
 
@@ -201,11 +210,7 @@ func resourceCloudFlareFirewallAccessRuleUpdate(d *schema.ResourceData, meta int
 			return err
 		}
 	} else {
-		zone, err := client.ZoneDetails(zoneID)
-		if err != nil {
-			return err
-		}
-		if _, err := client.UpdateOrganizationAccessRule(zone.Owner.ID, ruleID, rule); err != nil {
+		if _, err := client.UpdateOrganizationAccessRule(orgID, ruleID, rule); err != nil {
 			return err
 		}
 	}
@@ -216,6 +221,7 @@ func resourceCloudFlareFirewallAccessRuleUpdate(d *schema.ResourceData, meta int
 func resourceCloudFlareFirewallAccessRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zoneID := d.Get("zone_id").(string)
+	orgID := d.Get("org_id").(string)
 	scope := d.Get("scope").(string)
 	ruleID := d.Id()
 
@@ -224,11 +230,7 @@ func resourceCloudFlareFirewallAccessRuleDelete(d *schema.ResourceData, meta int
 			return err
 		}
 	} else {
-		zone, err := client.ZoneDetails(zoneID)
-		if err != nil {
-			return err
-		}
-		if _, err := client.DeleteOrganizationAccessRule(zone.Owner.ID, ruleID); err != nil {
+		if _, err := client.DeleteOrganizationAccessRule(orgID, ruleID); err != nil {
 			return err
 		}
 	}
@@ -244,17 +246,27 @@ func resourceCloudFlareFirewallAccessRuleImport(d *schema.ResourceData, meta int
 	}
 
 	scope := tokens[0]
-	zone := tokens[1]
+	zoneName := tokens[1]
 	ruleID := tokens[2]
 
-	zoneId, err := client.ZoneIDByName(zone)
+	zoneID, err := client.ZoneIDByName(zoneName)
 	if err != nil {
 		return nil, err
 	}
 
+	orgID := "N/A"
+	if scope != "zone" {
+		zone, err := client.ZoneDetails(zoneID)
+		if err != nil {
+			return nil, err
+		}
+		orgID = zone.Owner.ID
+	}
+
 	d.Set("scope", scope)
-	d.Set("zone", zone)
-	d.Set("zone_id", zoneId)
+	d.Set("zone", zoneName)
+	d.Set("zone_id", zoneID)
+	d.Set("org_id", orgID)
 	d.SetId(ruleID)
 	return []*schema.ResourceData{d}, nil
 }
