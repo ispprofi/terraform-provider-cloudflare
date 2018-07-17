@@ -56,7 +56,7 @@ func resourceCloudFlareRateLimit() *schema.Resource {
 						"mode": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"simulate", "ban"}, true),
+							ValidateFunc: validation.StringInSlice([]string{"simulate", "ban", "challenge", "js_challenge"}, true),
 						},
 
 						"timeout": {
