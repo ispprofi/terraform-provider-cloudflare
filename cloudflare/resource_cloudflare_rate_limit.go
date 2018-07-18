@@ -61,8 +61,8 @@ func resourceCloudFlareRateLimit() *schema.Resource {
 
 						"timeout": {
 							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 86400),
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 86400),
 						},
 
 						"response": {
