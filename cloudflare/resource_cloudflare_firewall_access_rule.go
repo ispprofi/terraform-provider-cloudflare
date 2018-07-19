@@ -9,14 +9,14 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceCloudFlareFirewallAccessRule() *schema.Resource {
+func resourceCloudflareFirewallAccessRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudFlareFirewallAccessRuleCreate,
-		Read:   resourceCloudFlareFirewallAccessRuleRead,
-		Update: resourceCloudFlareFirewallAccessRuleUpdate,
-		Delete: resourceCloudFlareFirewallAccessRuleDelete,
+		Create: resourceCloudflareFirewallAccessRuleCreate,
+		Read:   resourceCloudflareFirewallAccessRuleRead,
+		Update: resourceCloudflareFirewallAccessRuleUpdate,
+		Delete: resourceCloudflareFirewallAccessRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceCloudFlareFirewallAccessRuleImport,
+			State: resourceCloudflareFirewallAccessRuleImport,
 		},
 
 		SchemaVersion: 0,
@@ -70,7 +70,7 @@ func resourceCloudFlareFirewallAccessRule() *schema.Resource {
 	}
 }
 
-func resourceCloudFlareFirewallAccessRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudflareFirewallAccessRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zoneName := d.Get("zone").(string)
 	scope := d.Get("scope").(string)
@@ -118,10 +118,10 @@ func resourceCloudFlareFirewallAccessRuleCreate(d *schema.ResourceData, meta int
 	}
 	d.SetId(ruleID)
 
-	return resourceCloudFlareFirewallAccessRuleRead(d, meta)
+	return resourceCloudflareFirewallAccessRuleRead(d, meta)
 }
 
-func resourceCloudFlareFirewallAccessRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudflareFirewallAccessRuleRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zoneID := d.Get("zone_id").(string)
 	orgID := d.Get("org_id").(string)
@@ -188,7 +188,7 @@ func findOrganizationAccessRule(client *cloudflare.API, orgID string, ruleID str
 	}
 }
 
-func resourceCloudFlareFirewallAccessRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudflareFirewallAccessRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zoneID := d.Get("zone_id").(string)
 	orgID := d.Get("org_id").(string)
@@ -215,10 +215,10 @@ func resourceCloudFlareFirewallAccessRuleUpdate(d *schema.ResourceData, meta int
 		}
 	}
 
-	return resourceCloudFlareFirewallAccessRuleRead(d, meta)
+	return resourceCloudflareFirewallAccessRuleRead(d, meta)
 }
 
-func resourceCloudFlareFirewallAccessRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudflareFirewallAccessRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zoneID := d.Get("zone_id").(string)
 	orgID := d.Get("org_id").(string)
@@ -237,7 +237,7 @@ func resourceCloudFlareFirewallAccessRuleDelete(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceCloudFlareFirewallAccessRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudflareFirewallAccessRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	client := meta.(*cloudflare.API)
 
 	tokens := strings.SplitN(d.Id(), "/", 3)
