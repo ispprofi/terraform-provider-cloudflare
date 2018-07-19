@@ -156,18 +156,6 @@ func resourceCloudflarePageRule() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"on", "off"}, false),
 						},
 
-						"waf": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"on", "off"}, false),
-						},
-
-						"mirage": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"on", "off"}, false),
-						},
-
 						// may get api errors trying to set this
 						"opportunistic_encryption": {
 							Type:         schema.TypeString,
@@ -217,12 +205,6 @@ func resourceCloudflarePageRule() *schema.Resource {
 						},
 
 						"disable_security": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-
-						"disable_railgun": {
 							Type:     schema.TypeBool,
 							Default:  false,
 							Optional: true,
@@ -288,11 +270,6 @@ func resourceCloudflarePageRule() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice([]string{"off", "flexible", "full", "strict"}, false),
-						},
-
-						"bypass_cache_on_cookie": {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 					},
 				},
