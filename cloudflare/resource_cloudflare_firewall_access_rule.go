@@ -146,28 +146,51 @@ func resourceCloudflareFirewallAccessRuleRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func findZoneAccessRule(client *cloudflare.API, zoneID string, ruleID string) (*cloudflare.AccessRule, error) {
-	page := 1
+var zoneAccessRules = make(map[string]map[string]cloudflare.AccessRule)
+
+func getZoneAccessRules(client *cloudflare.API, zoneID string) (map[string]cloudflare.AccessRule, error) {
+	if rules, exist := zoneAccessRules[zoneID]; exist {
+		return rules, nil
+	}
+	rules := make(map[string]cloudflare.AccessRule)
 	search := cloudflare.AccessRule{}
 	search.Scope.Type = "zone"
+	page := 1
 	for {
 		res, err := client.ListZoneAccessRules(zoneID, search, page)
 		if err != nil {
 			return nil, err
 		}
 		for _, rule := range res.Result {
-			if rule.ID == ruleID {
-				return &rule, nil
-			}
+			rules[rule.ID] = rule
 		}
 		if res.TotalPages == 0 || res.TotalPages == page {
-			return nil, fmt.Errorf("cannot find zone firewall access rule for ID %v", ruleID)
+			break
 		}
 		page += 1
 	}
+	zoneAccessRules[zoneID] = rules
+	return rules, nil
 }
 
-func findOrganizationAccessRule(client *cloudflare.API, orgID string, ruleID string) (*cloudflare.AccessRule, error) {
+func findZoneAccessRule(client *cloudflare.API, zoneID string, ruleID string) (*cloudflare.AccessRule, error) {
+	rules, err := getZoneAccessRules(client, zoneID)
+	if err != nil {
+		return nil, err
+	}
+	if rule, exists := rules[ruleID]; exists {
+		return &rule, nil
+	}
+	return nil, fmt.Errorf("cannot find zone firewall access rule for ID %v", ruleID)
+}
+
+var organizationAccessRules = make(map[string]map[string]cloudflare.AccessRule)
+
+func getOrganizationAccessRules(client *cloudflare.API, orgID string) (map[string]cloudflare.AccessRule, error) {
+	if rules, exist := organizationAccessRules[orgID]; exist {
+		return rules, nil
+	}
+	rules := make(map[string]cloudflare.AccessRule)
 	search := cloudflare.AccessRule{}
 	search.Scope.Type = "organization"
 	page := 1
@@ -177,15 +200,26 @@ func findOrganizationAccessRule(client *cloudflare.API, orgID string, ruleID str
 			return nil, err
 		}
 		for _, rule := range res.Result {
-			if rule.ID == ruleID {
-				return &rule, nil
-			}
+			rules[rule.ID] = rule
 		}
 		if res.TotalPages == 0 || res.TotalPages == page {
-			return nil, fmt.Errorf("cannot find organization firewall access rule for ID %v", ruleID)
+			break
 		}
 		page += 1
 	}
+	organizationAccessRules[orgID] = rules
+	return rules, nil
+}
+
+func findOrganizationAccessRule(client *cloudflare.API, orgID string, ruleID string) (*cloudflare.AccessRule, error) {
+	rules, err := getOrganizationAccessRules(client, orgID)
+	if err != nil {
+		return nil, err
+	}
+	if rule, exists := rules[ruleID]; exists {
+		return &rule, nil
+	}
+	return nil, fmt.Errorf("cannot find organization firewall access rule for ID %v", ruleID)
 }
 
 func resourceCloudflareFirewallAccessRuleUpdate(d *schema.ResourceData, meta interface{}) error {
