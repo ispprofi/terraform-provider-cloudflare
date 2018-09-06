@@ -39,7 +39,7 @@ resource "cloudflare_zone_settings_override" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the DNS zone to apply rate limiting to.
+* `name` - (Required) The DNS zone to which apply settings.
 * `settings` - (Optional) Settings overrides that will be applied to the zone. If a setting is not specified the existing setting will be used. For a full list of available settings see below.
 
 The **settings** block supports settings that may be applied to the zone. These may be on/off values, unitary fields, string values, integers or nested objects.
@@ -72,7 +72,6 @@ These can be specified as "on" or "off" string. Similar to boolean values, but h
 * `sha1_support`
 * `sort_query_string_for_cache`
 * `tls_1_2_only`
-* `tls_1_3`
 * `tls_client_auth`
 * `true_client_ip_header`
 * `waf`
@@ -86,8 +85,9 @@ These can be specified as "on" or "off" string. Similar to boolean values, but h
 * `min_tls_version`. Allowed values: "1.0", "1.1", "1.2", "1.3".
 * `polish`. Allowed values: "off", "lossless", "lossy".
 * `pseudo_ipv4`. Allowed values: "off", "add_header", "overwrite_header".
-* `security_level`. Allowed values: "essentially_off", "low", "medium", "high", "under_attack".
+* `security_level`. Allowed values: "off" (Enterprise only), "essentially_off", "low", "medium", "high", "under_attack".
 * `ssl`. Allowed values: "off", "flexible", "full", "strict".
+* `tls_1_3`. Allowed values: "off", "on", "zrt".
 
 ### Integer Values
 

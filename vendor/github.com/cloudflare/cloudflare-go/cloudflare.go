@@ -32,7 +32,7 @@ type API struct {
 	APIEmail          string
 	APIUserServiceKey string
 	BaseURL           string
-	organizationID    string
+	OrganizationID    string
 	headers           http.Header
 	httpClient        *http.Client
 	authType          int
@@ -103,14 +103,26 @@ func (api *API) makeRequest(method, uri string, params interface{}) ([]byte, err
 	return api.makeRequestWithAuthType(method, uri, params, api.authType)
 }
 
+func (api *API) makeRequestWithHeaders(method, uri string, params interface{}, headers http.Header) ([]byte, error) {
+	return api.makeRequestWithAuthTypeAndHeaders(method, uri, params, api.authType, headers)
+}
+
 func (api *API) makeRequestWithAuthType(method, uri string, params interface{}, authType int) ([]byte, error) {
+	return api.makeRequestWithAuthTypeAndHeaders(method, uri, params, authType, nil)
+}
+
+func (api *API) makeRequestWithAuthTypeAndHeaders(method, uri string, params interface{}, authType int, headers http.Header) ([]byte, error) {
 	// Replace nil with a JSON object if needed
 	var jsonBody []byte
 	var err error
 	if params != nil {
-		jsonBody, err = json.Marshal(params)
-		if err != nil {
-			return nil, errors.Wrap(err, "error marshalling params to JSON")
+		if paramBytes, ok := params.([]byte); ok {
+			jsonBody = paramBytes
+		} else {
+			jsonBody, err = json.Marshal(params)
+			if err != nil {
+				return nil, errors.Wrap(err, "error marshalling params to JSON")
+			}
 		}
 	} else {
 		jsonBody = nil
@@ -142,7 +154,7 @@ func (api *API) makeRequestWithAuthType(method, uri string, params interface{}, 
 		if err != nil {
 			return nil, errors.Wrap(err, "Error caused by request rate limiting")
 		}
-		resp, respErr = api.request(method, uri, reqBody, authType)
+		resp, respErr = api.request(method, uri, reqBody, authType, headers)
 
 		// retry if the server is rate limiting us or if it failed
 		// assumes server operations are rolled back on failure
@@ -201,14 +213,16 @@ func (api *API) makeRequestWithAuthType(method, uri string, params interface{}, 
 // request makes a HTTP request to the given API endpoint, returning the raw
 // *http.Response, or an error if one occurred. The caller is responsible for
 // closing the response body.
-func (api *API) request(method, uri string, reqBody io.Reader, authType int) (*http.Response, error) {
+func (api *API) request(method, uri string, reqBody io.Reader, authType int, headers http.Header) (*http.Response, error) {
 	req, err := http.NewRequest(method, api.BaseURL+uri, reqBody)
 	if err != nil {
 		return nil, errors.Wrap(err, "HTTP request creation failed")
 	}
 
-	// Apply any user-defined headers first.
-	req.Header = cloneHeader(api.headers)
+	combinedHeaders := make(http.Header)
+	copyHeader(combinedHeaders, api.headers)
+	copyHeader(combinedHeaders, headers)
+	req.Header = combinedHeaders
 	if authType&AuthKeyEmail != 0 {
 		req.Header.Set("X-Auth-Key", api.APIKey)
 		req.Header.Set("X-Auth-Email", api.APIEmail)
@@ -235,20 +249,18 @@ func (api *API) request(method, uri string, reqBody io.Reader, authType int) (*h
 // accountBase is the base URL for endpoints referring to the current user. It exists as a
 // parameter because it is not consistent across APIs.
 func (api *API) userBaseURL(accountBase string) string {
-	if api.organizationID != "" {
-		return "/accounts/" + api.organizationID
+	if api.OrganizationID != "" {
+		return "/accounts/" + api.OrganizationID
 	}
 	return accountBase
 }
 
-// cloneHeader returns a shallow copy of the header.
-// copied from https://godoc.org/github.com/golang/gddo/httputil/header#Copy
-func cloneHeader(header http.Header) http.Header {
-	h := make(http.Header)
-	for k, vs := range header {
-		h[k] = vs
+// copyHeader copies all headers for `source` and sets them on `target`.
+// based on https://godoc.org/github.com/golang/gddo/httputil/header#Copy
+func copyHeader(target, source http.Header) {
+	for k, vs := range source {
+		target[k] = vs
 	}
-	return h
 }
 
 // ResponseInfo contains a code and message returned by the API as errors or
