@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	cloudflare "github.com/cloudflare/cloudflare-go"
+	"github.com/cloudflare/cloudflare-go"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -123,19 +123,25 @@ func resourceCloudflareAccessRuleCreate(d *schema.ResourceData, meta interface{}
 
 func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
+	zone := d.Get("zone").(string)
 	zoneID := d.Get("zone_id").(string)
 
 	var accessRuleResponse *cloudflare.AccessRuleResponse
 	var err error
 
-	if zoneID == "" {
+	if zoneID == "" && zone == "" {
 		if client.OrganizationID != "" {
 			accessRuleResponse, err = client.OrganizationAccessRule(client.OrganizationID, d.Id())
 		} else {
 			accessRuleResponse, err = client.UserAccessRule(d.Id())
 		}
 	} else {
-		accessRuleResponse, err = client.ZoneAccessRule(zoneID, d.Id())
+		if zoneID == "" {
+			zoneID, err = client.ZoneIDByName("zone")
+		}
+		if err == nil {
+			accessRuleResponse, err = client.ZoneAccessRule(zoneID, d.Id())
+		}
 	}
 
 	log.Printf("[DEBUG] accessRuleResponse: %#v", accessRuleResponse)
@@ -152,6 +158,8 @@ func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Cloudflare Access Rule read configuration: %#v", accessRuleResponse)
 
+	d.Set("zone", zone)
+	d.Set("zone_id", zoneID)
 	d.Set("mode", accessRuleResponse.Result.Mode)
 	d.Set("notes", accessRuleResponse.Result.Notes)
 	log.Printf("[DEBUG] read configuration: %#v", d.Get("configuration"))
