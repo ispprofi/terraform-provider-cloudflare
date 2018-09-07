@@ -137,7 +137,7 @@ func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) 
 		}
 	} else {
 		if zoneID == "" {
-			zoneID, err = client.ZoneIDByName("zone")
+			zoneID, err = client.ZoneIDByName(zone)
 		}
 		if err == nil {
 			accessRuleResponse, err = client.ZoneAccessRule(zoneID, d.Id())
