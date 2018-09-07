@@ -95,7 +95,6 @@ func Provider() terraform.ResourceProvider {
 			"cloudflare_worker_route":           resourceCloudflareWorkerRoute(),
 			"cloudflare_worker_script":          resourceCloudflareWorkerScript(),
 			"cloudflare_zone_settings_override": resourceCloudflareZoneSettingsOverride(),
-			"cloudflare_firewall_access_rule":   resourceCloudflareFirewallAccessRule(),
 		},
 
 		ConfigureFunc: providerConfigure,
