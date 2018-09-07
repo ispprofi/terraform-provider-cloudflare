@@ -17,7 +17,7 @@ func resourceCloudflareAccessRule() *schema.Resource {
 		Update: resourceCloudflareAccessRuleUpdate,
 		Delete: resourceCloudflareAccessRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceCloudflareAccessRuleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -123,25 +123,19 @@ func resourceCloudflareAccessRuleCreate(d *schema.ResourceData, meta interface{}
 
 func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
-	zone := d.Get("zone").(string)
 	zoneID := d.Get("zone_id").(string)
 
 	var accessRuleResponse *cloudflare.AccessRuleResponse
 	var err error
 
-	if zoneID == "" && zone == "" {
+	if zoneID == "" {
 		if client.OrganizationID != "" {
 			accessRuleResponse, err = client.OrganizationAccessRule(client.OrganizationID, d.Id())
 		} else {
 			accessRuleResponse, err = client.UserAccessRule(d.Id())
 		}
 	} else {
-		if zoneID == "" {
-			zoneID, err = client.ZoneIDByName(zone)
-		}
-		if err == nil {
-			accessRuleResponse, err = client.ZoneAccessRule(zoneID, d.Id())
-		}
+		accessRuleResponse, err = client.ZoneAccessRule(zoneID, d.Id())
 	}
 
 	log.Printf("[DEBUG] accessRuleResponse: %#v", accessRuleResponse)
@@ -153,8 +147,6 @@ func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Cloudflare Access Rule read configuration: %#v", accessRuleResponse)
 
-	d.Set("zone", zone)
-	d.Set("zone_id", zoneID)
 	d.Set("mode", accessRuleResponse.Result.Mode)
 	d.Set("notes", accessRuleResponse.Result.Notes)
 	log.Printf("[DEBUG] read configuration: %#v", d.Get("configuration"))
@@ -247,4 +239,35 @@ func configurationDiffSuppress(k, old, new string, d *schema.ResourceData) bool 
 	}
 
 	return false
+}
+
+func resourceCloudflareAccessRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*cloudflare.API)
+
+	var err error
+	var ruleID string
+	var zoneName string
+	var zoneID string
+
+	tokens := strings.SplitN(d.Id(), "/", 2)
+	if len(tokens) == 1 {
+		ruleID = d.Id()
+	} else if len(tokens) == 2 {
+		zoneName = tokens[1]
+		ruleID = tokens[2]
+	} else {
+		return nil, fmt.Errorf("invalid id (\"%s\") specified, should be in format \"zoneName/ruleID\"", d.Id())
+	}
+
+	if zoneName != "" {
+		zoneID, err = client.ZoneIDByName(zoneName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	d.SetId(ruleID)
+	d.Set("zone", zoneName)
+	d.Set("zone_id", zoneID)
+	return []*schema.ResourceData{d}, nil
 }
