@@ -29,7 +29,7 @@ func resourceCloudflareAccessRule() *schema.Resource {
 			"zone_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"mode": {
 				Type:         schema.TypeString,
