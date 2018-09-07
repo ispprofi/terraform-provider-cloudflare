@@ -247,8 +247,8 @@ func resourceCloudflareAccessRuleImport(d *schema.ResourceData, meta interface{}
 	if len(tokens) == 1 {
 		ruleID = d.Id()
 	} else if len(tokens) == 2 {
-		zoneName = tokens[1]
-		ruleID = tokens[2]
+		zoneName = tokens[0]
+		ruleID = tokens[1]
 	} else {
 		return nil, fmt.Errorf("invalid id (\"%s\") specified, should be in format \"zoneName/ruleID\"", d.Id())
 	}
