@@ -66,7 +66,7 @@ func resourceCloudflareAccessRule() *schema.Resource {
 func resourceCloudflareAccessRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zone := d.Get("zone").(string)
-	zone_id := d.Get("zone_id").(string)
+	zoneID := d.Get("zone_id").(string)
 
 	newRule := cloudflare.AccessRule{
 		Notes: d.Get("notes").(string),
@@ -85,26 +85,20 @@ func resourceCloudflareAccessRuleCreate(d *schema.ResourceData, meta interface{}
 	var r *cloudflare.AccessRuleResponse
 	var err error
 
-	if zone == "" && zone_id == "" {
+	if zone == "" && zoneID == "" {
 		if client.OrganizationID != "" {
 			r, err = client.CreateOrganizationAccessRule(client.OrganizationID, newRule)
 		} else {
 			r, err = client.CreateUserAccessRule(newRule)
 		}
 	} else {
-		var zoneID string
-
-		if zone_id != "" {
-			zoneID = zone_id
-		} else {
+		if zoneID == "" {
 			zoneID, err = client.ZoneIDByName(zone)
 			if err != nil {
 				return fmt.Errorf("Error finding zone %q: %s", zone, err)
 			}
-
 			d.Set("zone_id", zoneID)
 		}
-
 		r, err = client.CreateZoneAccessRule(zoneID, newRule)
 	}
 
