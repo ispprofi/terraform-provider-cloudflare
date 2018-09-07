@@ -148,11 +148,6 @@ func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] accessRuleResponse error: %#v", err)
 
 	if err != nil {
-		if strings.Contains(err.Error(), "HTTP status 404") {
-			log.Printf("[INFO] Page Rule %s no longer exists", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("Error finding access rule %q: %s", d.Id(), err)
 	}
 
