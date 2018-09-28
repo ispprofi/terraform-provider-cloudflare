@@ -60,7 +60,7 @@ Valid IDs are:
 */
 type PageRuleAction struct {
 	ID    string      `json:"id"`
-	Value interface{} `json:"value"`
+	Value interface{} `json:"value,omitempty"`
 }
 
 // PageRuleActions maps API action IDs to human-readable strings.
