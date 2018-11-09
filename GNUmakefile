@@ -7,7 +7,7 @@ VERSION=$(shell git describe --tags --always)
 default: build
 
 build: fmtcheck
-	go install -ldflags="-X github.com/terraform-providers/terraform-provider-cloudflare/cloudflare.pluginVersion=$(VERSION)"
+	go install -ldflags="-X github.com/terraform-providers/terraform-provider-cloudflare/version.ProviderVersion=$(VERSION)"
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
@@ -65,4 +65,3 @@ linux:
 	shasum -a 256 terraform-provider-cloudflare  | awk '{ print $$1 }' > terraform-provider-cloudflare.sha256.txt
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test
-

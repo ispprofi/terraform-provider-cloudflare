@@ -251,22 +251,10 @@
 			"revisionTime": "2017-07-27T06:48:18Z"
 		},
 		{
-			"checksumSHA1": "rYc2bTNfDk0JL5Tb+B/snlzRkJE=",
-			"path": "github.com/client9/misspell",
-			"revision": "c0b55c8239520f6b5aa15a0207ca8b28027ba49e",
-			"revisionTime": "2018-03-09T02:03:25Z"
-		},
-		{
-			"checksumSHA1": "3Lbx+qNi8brwKa9dU41O6SEOW6c=",
-			"path": "github.com/client9/misspell/cmd/misspell",
-			"revision": "c0b55c8239520f6b5aa15a0207ca8b28027ba49e",
-			"revisionTime": "2018-03-09T02:03:25Z"
-		},
-		{
-			"checksumSHA1": "EIN+Ad7jgNxbiayLQrNRQeZso7w=",
+			"checksumSHA1": "ANR/7MdWTtjTzxFZSuKE0Ss5j0s=",
 			"path": "github.com/cloudflare/cloudflare-go",
-			"revision": "e24ed152b4c8d947daef772b3505c3d2d3ab01bb",
-			"revisionTime": "2018-10-04T11:59:00Z"
+			"revision": "ce7d675bb47545871f6128c18b0a83c32b51e0d5",
+			"revisionTime": "2018-11-07T18:41:27Z"
 		},
 		{
 			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",

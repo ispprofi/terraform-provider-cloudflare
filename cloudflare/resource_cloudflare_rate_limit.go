@@ -37,7 +37,7 @@ func resourceCloudflareRateLimit() *schema.Resource {
 			"threshold": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntBetween(2, 1000000),
+				ValidateFunc: validation.IntBetween(1, 1000000),
 			},
 
 			"period": {
@@ -453,8 +453,10 @@ func flattenRateLimitRequestMatcher(cfg cloudflare.RateLimitRequestMatcher) []ma
 }
 
 func flattenRateLimitResponseMatcher(cfg cloudflare.RateLimitResponseMatcher) []map[string]interface{} {
-	data := map[string]interface{}{
-		"origin_traffic": *cfg.OriginTraffic,
+	data := map[string]interface{}{}
+
+	if cfg.OriginTraffic != nil {
+		data["origin_traffic"] = *cfg.OriginTraffic
 	}
 
 	if len(cfg.Statuses) > 0 {

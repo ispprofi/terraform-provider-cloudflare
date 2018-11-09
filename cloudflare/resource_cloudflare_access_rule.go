@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/cloudflare/cloudflare-go"
+	cloudflare "github.com/cloudflare/cloudflare-go"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -66,7 +66,7 @@ func resourceCloudflareAccessRule() *schema.Resource {
 func resourceCloudflareAccessRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zone := d.Get("zone").(string)
-	zoneID := d.Get("zone_id").(string)
+	zone_id := d.Get("zone_id").(string)
 
 	newRule := cloudflare.AccessRule{
 		Notes: d.Get("notes").(string),
@@ -85,20 +85,26 @@ func resourceCloudflareAccessRuleCreate(d *schema.ResourceData, meta interface{}
 	var r *cloudflare.AccessRuleResponse
 	var err error
 
-	if zone == "" && zoneID == "" {
+	if zone == "" && zone_id == "" {
 		if client.OrganizationID != "" {
 			r, err = client.CreateOrganizationAccessRule(client.OrganizationID, newRule)
 		} else {
 			r, err = client.CreateUserAccessRule(newRule)
 		}
 	} else {
-		if zoneID == "" {
+		var zoneID string
+
+		if zone_id != "" {
+			zoneID = zone_id
+		} else {
 			zoneID, err = client.ZoneIDByName(zone)
 			if err != nil {
 				return fmt.Errorf("Error finding zone %q: %s", zone, err)
 			}
+
 			d.Set("zone_id", zoneID)
 		}
+
 		r, err = client.CreateZoneAccessRule(zoneID, newRule)
 	}
 
@@ -126,6 +132,7 @@ func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) 
 		if client.OrganizationID != "" {
 			accessRuleResponse, err = client.OrganizationAccessRule(client.OrganizationID, d.Id())
 		} else {
+
 			accessRuleResponse, err = client.UserAccessRule(d.Id())
 		}
 	} else {
@@ -136,6 +143,11 @@ func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] accessRuleResponse error: %#v", err)
 
 	if err != nil {
+		if strings.Contains(err.Error(), "HTTP status 404") {
+			log.Printf("[INFO] Access Rule %s no longer exists", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("Error finding access rule %q: %s", d.Id(), err)
 	}
 
@@ -217,6 +229,36 @@ func resourceCloudflareAccessRuleDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
+func resourceCloudflareAccessRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	client := meta.(*cloudflare.API)
+	attributes := strings.Split(d.Id(), "/")
+
+	var (
+		accessRuleType           string
+		accessRuleTypeIdentifier string
+		accessRuleID             string
+	)
+
+	if len(attributes) != 3 {
+		return nil, fmt.Errorf("invalid id (\"%s\") specified, should be in format \"accessRuleType/accessRuleTypeIdentifier/identiferValue\"", d.Id())
+	}
+
+	accessRuleType, accessRuleTypeIdentifier, accessRuleID = attributes[0], attributes[1], attributes[2]
+
+	d.SetId(accessRuleID)
+
+	switch accessRuleType {
+	case "account":
+		client.OrganizationID = accessRuleTypeIdentifier
+	case "zone":
+		d.Set("zone_id", accessRuleTypeIdentifier)
+	}
+
+	resourceCloudflareAccessRuleRead(d, meta)
+
+	return []*schema.ResourceData{d}, nil
+}
+
 func configurationDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	switch {
 	case d.Get("configuration.target") == "country" &&
@@ -233,35 +275,4 @@ func configurationDiffSuppress(k, old, new string, d *schema.ResourceData) bool 
 	}
 
 	return false
-}
-
-func resourceCloudflareAccessRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	client := meta.(*cloudflare.API)
-
-	var err error
-	var ruleID string
-	var zoneName string
-	var zoneID string
-
-	tokens := strings.SplitN(d.Id(), "/", 2)
-	if len(tokens) == 1 {
-		ruleID = d.Id()
-	} else if len(tokens) == 2 {
-		zoneName = tokens[0]
-		ruleID = tokens[1]
-	} else {
-		return nil, fmt.Errorf("invalid id (\"%s\") specified, should be in format \"zoneName/ruleID\"", d.Id())
-	}
-
-	if zoneName != "" {
-		zoneID, err = client.ZoneIDByName(zoneName)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	d.SetId(ruleID)
-	d.Set("zone", zoneName)
-	d.Set("zone_id", zoneID)
-	return []*schema.ResourceData{d}, nil
 }

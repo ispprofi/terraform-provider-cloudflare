@@ -3,15 +3,16 @@ package cloudflare
 import (
 	"log"
 	"os"
+	"strings"
 
 	"fmt"
 
 	"github.com/cloudflare/cloudflare-go"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/httpclient"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-cloudflare/version"
 )
-
-var pluginVersion string
 
 // Provider returns a terraform.ResourceProvider.
 func Provider() terraform.ResourceProvider {
@@ -86,7 +87,11 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"cloudflare_access_application":     resourceCloudflareAccessApplication(),
+			"cloudflare_access_policy":          resourceCloudflareAccessPolicy(),
 			"cloudflare_access_rule":            resourceCloudflareAccessRule(),
+			"cloudflare_account_member":         resourceCloudflareAccountMember(),
+			"cloudflare_custom_pages":           resourceCloudflareCustomPages(),
 			"cloudflare_filter":                 resourceCloudflareFilter(),
 			"cloudflare_firewall_rule":          resourceCloudflareFirewallRule(),
 			"cloudflare_load_balancer_monitor":  resourceCloudflareLoadBalancerMonitor(),
@@ -100,6 +105,7 @@ func Provider() terraform.ResourceProvider {
 			"cloudflare_worker_script":          resourceCloudflareWorkerScript(),
 			"cloudflare_zone_lockdown":          resourceCloudflareZoneLockdown(),
 			"cloudflare_zone_settings_override": resourceCloudflareZoneSettingsOverride(),
+			"cloudflare_zone":                   resourceCloudflareZone(),
 		},
 
 		ConfigureFunc: providerConfigure,
@@ -161,9 +167,12 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return client, err
 	}
 
-	if pluginVersion != "" {
-		options = append(options, cloudflare.UserAgent("terraform-provider-cloudflare/"+pluginVersion))
-	}
+	// TODO: This is the SDK version not the CLI version, once we are on 0.12, should revisit
+	tfUserAgent := httpclient.UserAgentString()
+
+	pv := version.ProviderVersion
+	providerUserAgent := fmt.Sprintf("%s terraform-provider-cloudflare/%s", tfUserAgent, pv)
+	options = append(options, cloudflare.UserAgent(strings.TrimSpace(fmt.Sprintf("%s %s", client.UserAgent, providerUserAgent))))
 
 	config = Config{
 		Email:   d.Get("email").(string),
