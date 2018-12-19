@@ -16,7 +16,7 @@ Provides a resource which customizes Cloudflare zone settings. Note that after d
 resource "cloudflare_zone_settings_override" "test" {
 	name = "${var.cloudflare_zone}"
 	settings {
-		brotli = "on",
+		brotli = "on"
 		challenge_ttl = 2700
 		security_level = "high"
 		opportunistic_encryption = "on"
@@ -63,6 +63,7 @@ These can be specified as "on" or "off" string. Similar to boolean values, but h
 * `ipv6`
 * `mirage`
 * `opportunistic_encryption`
+* `opportunistic_onion`
 * `origin_error_page_pass_thru`
 * `prefetch_preload`
 * `privacy_pass`

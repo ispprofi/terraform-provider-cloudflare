@@ -106,6 +106,13 @@ var originsElem = &schema.Resource{
 			},
 		},
 
+		"weight": {
+			Type:         schema.TypeFloat,
+			Optional:     true,
+			Default:      1.0,
+			ValidateFunc: floatBetween(0.0, 1.0),
+		},
+
 		"enabled": {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -277,4 +284,22 @@ func resourceCloudflareLoadBalancerPoolDelete(d *schema.ResourceData, meta inter
 	}
 
 	return nil
+}
+
+// floatBetween returns a validate function that can be used in schema definitions.
+func floatBetween(min, max float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float64", k))
+			return
+		}
+
+		if v < min || v > max {
+			es = append(es, fmt.Errorf("expected %s to be within %v and %v", k, min, max))
+			return
+		}
+
+		return
+	}
 }

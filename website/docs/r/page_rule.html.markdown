@@ -1,7 +1,7 @@
 ---
 layout: "cloudflare"
 page_title: "Cloudflare: cloudflare_page_rule"
-sidebar_current: "docs-cloudflare-resource-page_rule"
+sidebar_current: "docs-cloudflare-resource-page-rule"
 description: |-
   Provides a Cloudflare page rule resource.
 ---
@@ -20,8 +20,8 @@ resource "cloudflare_page_rule" "foobar" {
   priority = 1
 
   actions = {
-    ssl = "flexible",
-    email_obfuscation = "on",
+    ssl = "flexible"
+    email_obfuscation = "on"
   }
 }
 ```

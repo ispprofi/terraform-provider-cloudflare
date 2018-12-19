@@ -10,7 +10,7 @@ Requirements
 ------------
 
 -	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
--	[Go](https://golang.org/doc/install) 1.9 (to build the provider plugin)
+-	[Go](https://golang.org/doc/install) 1.10 (to build the provider plugin)
 
 ## Building The Provider
 
@@ -18,7 +18,7 @@ Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provi
 
 ```sh
 $ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
-$ git clone git@github.com:terraform-providers/terraform-provider-cloudflare
+$ git clone https://github.com/terraform-providers/terraform-provider-cloudflare.git
 ```
 
 When it comes to building you have two options:
