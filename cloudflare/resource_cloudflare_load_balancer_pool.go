@@ -118,13 +118,6 @@ var originsElem = &schema.Resource{
 			Optional: true,
 			Default:  true,
 		},
-
-		"weight": {
-			Type:         schema.TypeFloat,
-			Optional:     true,
-			Default:      1.0,
-			ValidateFunc: validateFloatBetween(0.0, 1.0),
-		},
 	},
 }
 

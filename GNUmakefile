@@ -64,4 +64,4 @@ linux:
 	GOOS=linux GOARCH=amd64 go build -o terraform-provider-cloudflare main.go
 	shasum -a 256 terraform-provider-cloudflare  | awk '{ print $$1 }' > terraform-provider-cloudflare.sha256.txt
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test
+.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test linux
