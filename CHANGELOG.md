@@ -1,4 +1,23 @@
-## 1.12.0 (Unreleased)
+## 1.13.0 (Unreleased)
+## 1.12.0 (March 07, 2019)
+
+**Improvements:**
+
+* provider: Enable request/response logging ([#212](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/212))
+* resource/cloudflare_load_balancer_monitor: Add validation for `port` ([#213](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/213))
+* resource/cloudflare_load_balancer_monitor: Add `allow_insecure` and `follow_redirects` ([#205](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/205))
+* resouce/cloudflare_page_rule: Updated available actions documentation to match what is available ([#228](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/228))
+* provider: Swap to using go modules for dependency management ([#230](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/230))
+* provider: Minimum Go version for development is now 1.11 ([#230](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/230))
+
+**Fixes:**
+
+* resource/cloudflare_record: Read `data` back from API correctly ([#217](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/217))
+* resource/cloudflare_rate_limit: Read `correlate` back from API correctly ([#204](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/204))
+* resource/cloudflare_load_balancer_monitor: Fix incorrect type cast for `port` ([#213](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/213))
+* resource/cloudflare_load_balancer: Make `steering_policy` computed to avoid spurious diffs ([#214](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/214))
+* resource/cloudflare_load_balancer: Read `session_affinity` back from API to make import work & detects drifts ([#214](https://github.com/terraform-providers/terraform-provider-cloudflare/issues/214))
+
 ## 1.11.0 (January 11, 2019)
 
 **Improvements:**

@@ -35,9 +35,6 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-vendor-status:
-	@govendor status
-
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
@@ -60,8 +57,8 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
+.PHONY: build test testacc vet fmt fmtcheck errcheck test-compile website website-test
+
 linux:
 	GOOS=linux GOARCH=amd64 go build -o terraform-provider-cloudflare main.go
 	shasum -a 256 terraform-provider-cloudflare  | awk '{ print $$1 }' > terraform-provider-cloudflare.sha256.txt
-
-.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test linux
