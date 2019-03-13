@@ -193,12 +193,6 @@ func resourceCloudflarePageRule() *schema.Resource {
 							Optional: true,
 						},
 
-						"disable_railgun": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-
 						"disable_security": {
 							Type:     schema.TypeBool,
 							Default:  false,
@@ -513,7 +507,6 @@ var pageRuleAPINilFields = []string{
 	"always_use_https",
 	"disable_apps",
 	"disable_performance",
-	"disable_railgun",
 	"disable_security",
 }
 var pageRuleAPIFloatFields = []string{
