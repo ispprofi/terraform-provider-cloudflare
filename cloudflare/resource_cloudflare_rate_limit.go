@@ -227,7 +227,7 @@ func resourceCloudflareRateLimitCreate(d *schema.ResourceData, meta interface{})
 		newRateLimit.Bypass = expandRateLimitBypass(bypassUrlPatterns.(*schema.Set))
 	}
 
-	newRateLimit.Correlate, _ = expandRateLimitCorrelate(d)
+	newRateLimit.Correlate = expandRateLimitCorrelate(d)
 
 	newRateLimitAction, err := expandRateLimitAction(d)
 	if err != nil {
@@ -302,7 +302,7 @@ func resourceCloudflareRateLimitUpdate(d *schema.ResourceData, meta interface{})
 		updatedRateLimit.Bypass = expandRateLimitBypass(bypassUrlPatterns.(*schema.Set))
 	}
 
-	updatedRateLimit.Correlate, _ = expandRateLimitCorrelate(d)
+	updatedRateLimit.Correlate = expandRateLimitCorrelate(d)
 
 	_, err = client.UpdateRateLimit(zoneId, rateLimitId, updatedRateLimit)
 	if err != nil {
@@ -393,19 +393,33 @@ func expandRateLimitAction(d *schema.ResourceData) (action cloudflare.RateLimitA
 	return action, nil
 }
 
-func expandRateLimitCorrelate(d *schema.ResourceData) (correlate cloudflare.RateLimitCorrelate, err error) {
+func expandRateLimitCorrelate(d *schema.ResourceData) *cloudflare.RateLimitCorrelate {
 	v, ok := d.GetOk("correlate")
 	if !ok {
-		return
+		return nil
 	}
-
-	tfCorrelate := v.([]interface{})[0].(map[string]interface{})
-
-	correlate = cloudflare.RateLimitCorrelate{
-		By: tfCorrelate["by"].(string),
+	seq, ok := v.([]interface{})
+	if !ok {
+		return nil
 	}
-
-	return
+	if len(seq) == 0 {
+		return nil
+	}
+	dict, ok := seq[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	obj, ok := dict["by"]
+	if !ok {
+		return nil
+	}
+	txt, ok := obj.(string)
+	if !ok {
+		return nil
+	}
+	return &cloudflare.RateLimitCorrelate{
+		By: txt,
+	}
 }
 
 func expandRateLimitBypass(bypassUrlPatterns *schema.Set) []cloudflare.RateLimitKeyValue {
@@ -519,7 +533,10 @@ func flattenRateLimitAction(cfg cloudflare.RateLimitAction) []map[string]interfa
 	return []map[string]interface{}{action}
 }
 
-func flattenRateLimitCorrelate(cfg cloudflare.RateLimitCorrelate) []map[string]interface{} {
+func flattenRateLimitCorrelate(cfg *cloudflare.RateLimitCorrelate) []map[string]interface{} {
+	if cfg == nil {
+		return []map[string]interface{}{}
+	}
 	correlate := map[string]interface{}{
 		"by": cfg.By,
 	}
