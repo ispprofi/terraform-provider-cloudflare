@@ -2,6 +2,7 @@ package cloudflare
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -10,6 +11,8 @@ import (
 )
 
 // VirtualDNS represents a Virtual DNS configuration.
+//
+// API reference: https://api.cloudflare.com/#dns-firewall-accounts--properties
 type VirtualDNS struct {
 	ID                   string   `json:"id"`
 	Name                 string   `json:"name"`
@@ -18,7 +21,9 @@ type VirtualDNS struct {
 	MinimumCacheTTL      uint     `json:"minimum_cache_ttl"`
 	MaximumCacheTTL      uint     `json:"maximum_cache_ttl"`
 	DeprecateAnyRequests bool     `json:"deprecate_any_requests"`
-	ModifiedOn           string   `json:"modified_on"`
+	ModifiedOn           string   `json:"modified_on,omitempty"`
+	EcsFallback          bool     `json:"ecs_fallback"`
+	RateLimit            uint     `json:"ratelimit"`
 }
 
 // VirtualDNSAnalyticsMetrics respresents a group of aggregated Virtual DNS metrics.
@@ -83,11 +88,48 @@ func (api *API) CreateVirtualDNS(v *VirtualDNS) (*VirtualDNS, error) {
 	return response.Result, nil
 }
 
+// CreateOrganizationVirtualDNS creates a new Virtual DNS cluster.
+//
+// API reference: https://api.cloudflare.com/#dns-firewall-accounts--create-dns-firewall-cluster
+func (api *API) CreateOrganizationVirtualDNS(organizationID string, v *VirtualDNS) (*VirtualDNS, error) {
+	res, err := api.makeRequest("POST", fmt.Sprintf("/accounts/%v/virtual_dns", organizationID), v)
+	if err != nil {
+		return nil, errors.Wrap(err, errMakeRequestError)
+	}
+
+	response := &VirtualDNSResponse{}
+	err = json.Unmarshal(res, &response)
+	if err != nil {
+		return nil, errors.Wrap(err, errUnmarshalError)
+	}
+
+	return response.Result, nil
+}
+
 // VirtualDNS fetches a single virtual DNS cluster.
 //
 // API reference: https://api.cloudflare.com/#virtual-dns-users--get-a-virtual-dns-cluster
 func (api *API) VirtualDNS(virtualDNSID string) (*VirtualDNS, error) {
 	uri := "/user/virtual_dns/" + virtualDNSID
+	res, err := api.makeRequest("GET", uri, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, errMakeRequestError)
+	}
+
+	response := &VirtualDNSResponse{}
+	err = json.Unmarshal(res, &response)
+	if err != nil {
+		return nil, errors.Wrap(err, errUnmarshalError)
+	}
+
+	return response.Result, nil
+}
+
+// OrganizationVirtualDNS fetches a single virtual DNS cluster.
+//
+// API reference: https://api.cloudflare.com/#dns-firewall-accounts--dns-firewall-cluster-details
+func (api *API) OrganizationVirtualDNS(organizationID string, virtualDNSID string) (*VirtualDNS, error) {
+	uri := fmt.Sprintf("/accounts/%v/virtual_dns/%v", organizationID, virtualDNSID)
 	res, err := api.makeRequest("GET", uri, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, errMakeRequestError)
@@ -120,11 +162,48 @@ func (api *API) ListVirtualDNS() ([]*VirtualDNS, error) {
 	return response.Result, nil
 }
 
+// ListOrganizationVirtualDNS lists the virtual DNS clusters associated with an account.
+//
+// API reference: https://api.cloudflare.com/#dns-firewall-accounts--list-dns-firewall-clusters
+func (api *API) ListOrganizationVirtualDNS(organizationID string) ([]*VirtualDNS, error) {
+	res, err := api.makeRequest("GET", fmt.Sprintf("accounts/%v/virtual_dns", organizationID), nil)
+	if err != nil {
+		return nil, errors.Wrap(err, errMakeRequestError)
+	}
+
+	response := &VirtualDNSListResponse{}
+	err = json.Unmarshal(res, &response)
+	if err != nil {
+		return nil, errors.Wrap(err, errUnmarshalError)
+	}
+
+	return response.Result, nil
+}
+
 // UpdateVirtualDNS updates a Virtual DNS cluster.
 //
 // API reference: https://api.cloudflare.com/#virtual-dns-users--modify-a-virtual-dns-cluster
 func (api *API) UpdateVirtualDNS(virtualDNSID string, vv VirtualDNS) error {
 	uri := "/user/virtual_dns/" + virtualDNSID
+	res, err := api.makeRequest("PUT", uri, vv)
+	if err != nil {
+		return errors.Wrap(err, errMakeRequestError)
+	}
+
+	response := &VirtualDNSResponse{}
+	err = json.Unmarshal(res, &response)
+	if err != nil {
+		return errors.Wrap(err, errUnmarshalError)
+	}
+
+	return nil
+}
+
+// UpdateOrganizationVirtualDNS updates a Virtual DNS cluster.
+//
+// API reference: https://api.cloudflare.com/#dns-firewall-accounts--update-dns-firewall-cluster
+func (api *API) UpdateOrganizationVirtualDNS(organizationID string, virtualDNSID string, vv VirtualDNS) error {
+	uri := fmt.Sprintf("/accounts/%v/virtual_dns/%v", organizationID, virtualDNSID)
 	res, err := api.makeRequest("PUT", uri, vv)
 	if err != nil {
 		return errors.Wrap(err, errMakeRequestError)
@@ -145,6 +224,26 @@ func (api *API) UpdateVirtualDNS(virtualDNSID string, vv VirtualDNS) error {
 // API reference: https://api.cloudflare.com/#virtual-dns-users--delete-a-virtual-dns-cluster
 func (api *API) DeleteVirtualDNS(virtualDNSID string) error {
 	uri := "/user/virtual_dns/" + virtualDNSID
+	res, err := api.makeRequest("DELETE", uri, nil)
+	if err != nil {
+		return errors.Wrap(err, errMakeRequestError)
+	}
+
+	response := &VirtualDNSResponse{}
+	err = json.Unmarshal(res, &response)
+	if err != nil {
+		return errors.Wrap(err, errUnmarshalError)
+	}
+
+	return nil
+}
+
+// DeleteOrganizationVirtualDNS deletes a Virtual DNS cluster. Note that this cannot be
+// undone, and will stop all traffic to that cluster.
+//
+// API reference: https://api.cloudflare.com/#dns-firewall-accounts--delete-dns-firewall-cluster
+func (api *API) DeleteOrganizationVirtualDNS(organizationID string, virtualDNSID string) error {
+	uri := fmt.Sprintf("/accounts/%v/virtual_dns/%v", organizationID, virtualDNSID)
 	res, err := api.makeRequest("DELETE", uri, nil)
 	if err != nil {
 		return errors.Wrap(err, errMakeRequestError)

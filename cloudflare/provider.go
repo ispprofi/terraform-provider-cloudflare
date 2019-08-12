@@ -109,6 +109,7 @@ func Provider() terraform.ResourceProvider {
 			"cloudflare_zone_lockdown":          resourceCloudflareZoneLockdown(),
 			"cloudflare_zone_settings_override": resourceCloudflareZoneSettingsOverride(),
 			"cloudflare_zone":                   resourceCloudflareZone(),
+			"cloudflare_virtual_dns":            resourceCloudflareVirtualDNS(),
 		},
 
 		ConfigureFunc: providerConfigure,
