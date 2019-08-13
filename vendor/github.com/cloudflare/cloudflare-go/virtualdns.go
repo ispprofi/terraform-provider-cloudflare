@@ -70,10 +70,10 @@ type VirtualDNSAnalyticsResponse struct {
 	Result VirtualDNSAnalytics `json:"result"`
 }
 
-// CreateVirtualDNS creates a new Virtual DNS cluster.
+// CreateUserVirtualDNS creates a new Virtual DNS cluster.
 //
 // API reference: https://api.cloudflare.com/#virtual-dns-users--create-a-virtual-dns-cluster
-func (api *API) CreateVirtualDNS(v *VirtualDNS) (*VirtualDNS, error) {
+func (api *API) CreateUserVirtualDNS(v *VirtualDNS) (*VirtualDNS, error) {
 	return api.createVirtualDNS("/user/virtual_dns", v)
 }
 
@@ -98,10 +98,10 @@ func (api *API) createVirtualDNS(uri string, v *VirtualDNS) (*VirtualDNS, error)
 	return response.Result, nil
 }
 
-// VirtualDNS fetches a single virtual DNS cluster.
+// UserVirtualDNS fetches a single virtual DNS cluster.
 //
 // API reference: https://api.cloudflare.com/#virtual-dns-users--get-a-virtual-dns-cluster
-func (api *API) VirtualDNS(virtualDNSID string) (*VirtualDNS, error) {
+func (api *API) UserVirtualDNS(virtualDNSID string) (*VirtualDNS, error) {
 	uri := "/user/virtual_dns/" + virtualDNSID
 	return api.getVirtualDNS(uri)
 }
@@ -127,10 +127,10 @@ func (api *API) getVirtualDNS(uri string) (*VirtualDNS, error) {
 	return response.Result, nil
 }
 
-// ListVirtualDNS lists the virtual DNS clusters associated with an account.
+// ListUserVirtualDNS lists the virtual DNS clusters associated with an account.
 //
 // API reference: https://api.cloudflare.com/#virtual-dns-users--get-virtual-dns-clusters
-func (api *API) ListVirtualDNS() ([]*VirtualDNS, error) {
+func (api *API) ListUserVirtualDNS() ([]*VirtualDNS, error) {
 	return api.listVirtualDNS("/user/virtual_dns")
 }
 
@@ -155,10 +155,10 @@ func (api *API) listVirtualDNS(uri string) ([]*VirtualDNS, error) {
 	return response.Result, nil
 }
 
-// UpdateVirtualDNS updates a Virtual DNS cluster.
+// UpdateUserVirtualDNS updates a Virtual DNS cluster.
 //
 // API reference: https://api.cloudflare.com/#virtual-dns-users--modify-a-virtual-dns-cluster
-func (api *API) UpdateVirtualDNS(virtualDNSID string, vv *VirtualDNS) error {
+func (api *API) UpdateUserVirtualDNS(virtualDNSID string, vv *VirtualDNS) error {
 	uri := "/user/virtual_dns/" + virtualDNSID
 	return api.updateVirtualDNS(uri, vv)
 }
@@ -184,11 +184,11 @@ func (api *API) updateVirtualDNS(uri string, vv *VirtualDNS) error {
 	return nil
 }
 
-// DeleteVirtualDNS deletes a Virtual DNS cluster. Note that this cannot be
+// DeleteUserVirtualDNS deletes a Virtual DNS cluster. Note that this cannot be
 // undone, and will stop all traffic to that cluster.
 //
 // API reference: https://api.cloudflare.com/#virtual-dns-users--delete-a-virtual-dns-cluster
-func (api *API) DeleteVirtualDNS(virtualDNSID string) error {
+func (api *API) DeleteUserVirtualDNS(virtualDNSID string) error {
 	uri := "/user/virtual_dns/" + virtualDNSID
 	return api.deleteVirtualDNS(uri)
 }
@@ -230,19 +230,29 @@ func (o VirtualDNSUserAnalyticsOptions) encode() string {
 	return v.Encode()
 }
 
-// VirtualDNSUserAnalytics retrieves analytics report for a specified dimension and time range
-func (api *API) VirtualDNSUserAnalytics(virtualDNSID string, o VirtualDNSUserAnalyticsOptions) (VirtualDNSAnalytics, error) {
+// UserVirtualDNSUserAnalytics retrieves analytics report for a specified dimension and time range
+func (api *API) UserVirtualDNSUserAnalytics(virtualDNSID string, o VirtualDNSUserAnalyticsOptions) (VirtualDNSAnalytics, error) {
 	uri := "/user/virtual_dns/" + virtualDNSID + "/dns_analytics/report?" + o.encode()
+	return api.virtualDNSUserAnalytics(uri)
+}
+
+// OrganizationVirtualDNSUserAnalytics retrieves analytics report for a specified dimension and time range
+//
+// API referernce: https://api.cloudflare.com/#dns-firewall-analytics-accounts--table
+func (api *API) OrganizationVirtualDNSUserAnalytics(organizationID string, virtualDNSID string, o VirtualDNSUserAnalyticsOptions) (VirtualDNSAnalytics, error) {
+	uri := fmt.Sprintf("/accounts/%v/virtual_dns/%v/dns_analytics/report?%v", organizationID, virtualDNSID, o.encode())
+	return api.virtualDNSUserAnalytics(uri)
+}
+
+func (api *API) virtualDNSUserAnalytics(uri string) (VirtualDNSAnalytics, error) {
 	res, err := api.makeRequest("GET", uri, nil)
 	if err != nil {
 		return VirtualDNSAnalytics{}, errors.Wrap(err, errMakeRequestError)
 	}
-
 	response := VirtualDNSAnalyticsResponse{}
 	err = json.Unmarshal(res, &response)
 	if err != nil {
 		return VirtualDNSAnalytics{}, errors.Wrap(err, errUnmarshalError)
 	}
-
 	return response.Result, nil
 }
