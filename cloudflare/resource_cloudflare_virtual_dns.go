@@ -115,7 +115,7 @@ func resourceCloudflareVirtualDNSCreate(d *schema.ResourceData, meta interface{}
 func resourceCloudflareVirtualDNSUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 
-	virtualDNS := cloudflare.VirtualDNS{
+	virtualDNS := &cloudflare.VirtualDNS{
 		ID:              d.Id(),
 		Name:            d.Get("name").(string),
 		OriginIPs:       expandInterfaceToStringList(d.Get("origin_ips").(*schema.Set).List()),

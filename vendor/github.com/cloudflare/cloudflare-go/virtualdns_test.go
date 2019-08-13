@@ -28,7 +28,7 @@ func TestAPI_VirtualDNS(t *testing.T) {
 	}
 	t.Logf("Instance: %+v", vv)
 
-	err = api.UpdateOrganizationVirtualDNS(api.OrganizationID, vdnsID, *vv)
+	err = api.UpdateOrganizationVirtualDNS(api.OrganizationID, vdnsID, vv)
 	if err != nil {
 		t.Fatal("cannot update instance", err)
 	}
