@@ -14,10 +14,10 @@ import (
 //
 // API reference: https://api.cloudflare.com/#dns-firewall-accounts--properties
 type VirtualDNS struct {
-	ID                   string   `json:"id"`
+	ID                   string   `json:"id,omitempty"`
 	Name                 string   `json:"name"`
 	OriginIPs            []string `json:"origin_ips"`
-	VirtualDNSIPs        []string `json:"virtual_dns_ips"`
+	VirtualDNSIPs        []string `json:"virtual_dns_ips,omitempty"`
 	MinimumCacheTTL      uint     `json:"minimum_cache_ttl"`
 	MaximumCacheTTL      uint     `json:"maximum_cache_ttl"`
 	DeprecateAnyRequests bool     `json:"deprecate_any_requests"`
@@ -80,7 +80,7 @@ func (api *API) CreateVirtualDNS(v *VirtualDNS) (*VirtualDNS, error) {
 	}
 
 	response := &VirtualDNSResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return nil, errors.Wrap(err, errUnmarshalError)
 	}
@@ -98,7 +98,7 @@ func (api *API) CreateOrganizationVirtualDNS(organizationID string, v *VirtualDN
 	}
 
 	response := &VirtualDNSResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return nil, errors.Wrap(err, errUnmarshalError)
 	}
@@ -117,7 +117,7 @@ func (api *API) VirtualDNS(virtualDNSID string) (*VirtualDNS, error) {
 	}
 
 	response := &VirtualDNSResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return nil, errors.Wrap(err, errUnmarshalError)
 	}
@@ -136,7 +136,7 @@ func (api *API) OrganizationVirtualDNS(organizationID string, virtualDNSID strin
 	}
 
 	response := &VirtualDNSResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return nil, errors.Wrap(err, errUnmarshalError)
 	}
@@ -154,7 +154,7 @@ func (api *API) ListVirtualDNS() ([]*VirtualDNS, error) {
 	}
 
 	response := &VirtualDNSListResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return nil, errors.Wrap(err, errUnmarshalError)
 	}
@@ -166,13 +166,13 @@ func (api *API) ListVirtualDNS() ([]*VirtualDNS, error) {
 //
 // API reference: https://api.cloudflare.com/#dns-firewall-accounts--list-dns-firewall-clusters
 func (api *API) ListOrganizationVirtualDNS(organizationID string) ([]*VirtualDNS, error) {
-	res, err := api.makeRequest("GET", fmt.Sprintf("accounts/%v/virtual_dns", organizationID), nil)
+	res, err := api.makeRequest("GET", fmt.Sprintf("/accounts/%v/virtual_dns", organizationID), nil)
 	if err != nil {
 		return nil, errors.Wrap(err, errMakeRequestError)
 	}
 
 	response := &VirtualDNSListResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return nil, errors.Wrap(err, errUnmarshalError)
 	}
@@ -191,7 +191,7 @@ func (api *API) UpdateVirtualDNS(virtualDNSID string, vv VirtualDNS) error {
 	}
 
 	response := &VirtualDNSResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return errors.Wrap(err, errUnmarshalError)
 	}
@@ -210,7 +210,7 @@ func (api *API) UpdateOrganizationVirtualDNS(organizationID string, virtualDNSID
 	}
 
 	response := &VirtualDNSResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return errors.Wrap(err, errUnmarshalError)
 	}
@@ -230,7 +230,7 @@ func (api *API) DeleteVirtualDNS(virtualDNSID string) error {
 	}
 
 	response := &VirtualDNSResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return errors.Wrap(err, errUnmarshalError)
 	}
@@ -250,7 +250,7 @@ func (api *API) DeleteOrganizationVirtualDNS(organizationID string, virtualDNSID
 	}
 
 	response := &VirtualDNSResponse{}
-	err = json.Unmarshal(res, &response)
+	err = json.Unmarshal(res, response)
 	if err != nil {
 		return errors.Wrap(err, errUnmarshalError)
 	}

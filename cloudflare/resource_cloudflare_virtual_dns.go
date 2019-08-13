@@ -36,6 +36,7 @@ func resourceCloudflareVirtualDNS() *schema.Resource {
 			},
 			"virtual_dns_ips": {
 				Type:     schema.TypeSet,
+				Computed: true,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
