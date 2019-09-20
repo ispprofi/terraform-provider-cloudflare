@@ -121,22 +121,6 @@ func resourceCloudflareAccessRuleCreate(d *schema.ResourceData, meta interface{}
 func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cloudflare.API)
 	zoneID := d.Get("zone_id").(string)
-	zoneName := d.Get("zone").(string)
-
-	if zoneID == "" {
-		zid, err := client.ZoneIDByName(zoneName)
-		if err != nil {
-			return fmt.Errorf("failed to find zone by name %s: %v", zoneName, err)
-		}
-		zoneID = zid
-	}
-	if zoneName == "" {
-		zone, err := client.ZoneDetails(zoneID)
-		if err != nil {
-			return fmt.Errorf("failed to find zone by ID %s: %v", zoneID, err)
-		}
-		zoneName = zone.Name
-	}
 
 	var accessRuleResponse *cloudflare.AccessRuleResponse
 	var err error
@@ -163,8 +147,6 @@ func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Cloudflare Access Rule read configuration: %#v", accessRuleResponse)
 
-	d.Set("zone", zoneName)
-	d.Set("zone_id", zoneID)
 	d.Set("mode", accessRuleResponse.Result.Mode)
 	d.Set("notes", accessRuleResponse.Result.Notes)
 	log.Printf("[DEBUG] read configuration: %#v", d.Get("configuration"))
