@@ -126,18 +126,20 @@ func resourceCloudflareFirewallRuleRead(d *schema.ResourceData, meta interface{}
 	client := meta.(*cloudflare.API)
 	zoneID := d.Get("zone_id").(string)
 	zoneName := d.Get("zone").(string)
+
 	if zoneID == "" {
-		zoneID, _ = client.ZoneIDByName(zoneName)
-	} else {
-		zones, err := client.ListZones()
+		zid, err := client.ZoneIDByName(zoneName)
 		if err != nil {
-			return fmt.Errorf("failed to lookup all zones: %s", err)
+			return fmt.Errorf("failed to find zone by name %s: %v", zoneName, err)
 		}
-		for _, zone := range zones {
-			if zone.ID == zoneID {
-				zoneName = zone.Name
-			}
+		zoneID = zid
+	}
+	if zoneName == "" {
+		zone, err := client.ZoneDetails(zoneID)
+		if err != nil {
+			return fmt.Errorf("failed to find zone by ID %s: %v", zoneID, err)
 		}
+		zoneName = zone.Name
 	}
 
 	firewallRule, err := client.FirewallRule(zoneID, d.Id())
