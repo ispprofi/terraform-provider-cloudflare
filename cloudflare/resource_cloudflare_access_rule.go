@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	cloudflare "github.com/cloudflare/cloudflare-go"
+	"github.com/cloudflare/cloudflare-go"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -122,32 +122,31 @@ func resourceCloudflareAccessRuleRead(d *schema.ResourceData, meta interface{}) 
 	client := meta.(*cloudflare.API)
 	zoneID := d.Get("zone_id").(string)
 	zoneName := d.Get("zone").(string)
+
 	if zoneID == "" {
-		zoneID, _ = client.ZoneIDByName(zoneName)
-	} else {
-		zones, err := client.ListZones()
+		zid, err := client.ZoneIDByName(zoneName)
 		if err != nil {
-			return fmt.Errorf("failed to lookup all zones: %s", err)
+			return fmt.Errorf("failed to find zone by name %s: %v", zoneName, err)
 		}
-		for _, zone := range zones {
-			if zone.ID == zoneID {
-				zoneName = zone.Name
-			}
+		zoneID = zid
+	}
+	if zoneName == "" {
+		zone, err := client.ZoneDetails(zoneID)
+		if err != nil {
+			return fmt.Errorf("failed to find zone by ID %s: %v", zoneID, err)
 		}
+		zoneName = zone.Name
 	}
 
 	var accessRuleResponse *cloudflare.AccessRuleResponse
 	var err error
 
-	if zoneID == "" {
-		if client.OrganizationID != "" {
-			accessRuleResponse, err = client.OrganizationAccessRule(client.OrganizationID, d.Id())
-		} else {
-
-			accessRuleResponse, err = client.UserAccessRule(d.Id())
-		}
-	} else {
+	if zoneID != "" {
 		accessRuleResponse, err = client.ZoneAccessRule(zoneID, d.Id())
+	} else if client.OrganizationID != "" {
+		accessRuleResponse, err = client.OrganizationAccessRule(client.OrganizationID, d.Id())
+	} else {
+		accessRuleResponse, err = client.UserAccessRule(d.Id())
 	}
 
 	log.Printf("[DEBUG] accessRuleResponse: %#v", accessRuleResponse)
